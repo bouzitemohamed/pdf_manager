@@ -4,6 +4,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Dark mode (default) ── */
+:root {
+  --bg-primary:    #0a0a18;
+  --bg-secondary:  #141428;
+  --bg-tertiary:   #1f1f3a;
+  --bg-hover:      rgba(255,255,255,0.03);
+  --border:        #2e2e52;
+  --border-light:  #3d3d6b;
+  --text-primary:  #ffffff;
+  --text-secondary:#8080b0;
+  --text-muted:    #5a5a8f;
+  --accent:        #f59e0b;
+  --accent-hover:  #fbbf24;
+  --shadow:        0 32px 80px rgba(0,0,0,0.6);
+  --chip-bg:       #1f1f3a;
+  --chip-text:     #fbbf24;
+  --input-bg:      #1f1f3a;
+  --card-bg:       #141428;
+  --header-bg:     #0a0a18;
+  --error-bg:      rgba(127,29,29,0.4);
+  --error-border:  #b91c1c;
+  --error-text:    #fca5a5;
+  --stat-bg:       #141428;
+}
+
+/* ── Light mode ── */
+html.light {
+  --bg-primary:    #f8f7f2;
+  --bg-secondary:  #ffffff;
+  --bg-tertiary:   #f1f0eb;
+  --bg-hover:      rgba(0,0,0,0.02);
+  --border:        #e2e0d8;
+  --border-light:  #d4d2ca;
+  --text-primary:  #1a1a2e;
+  --text-secondary:#6b6b8a;
+  --text-muted:    #9999b0;
+  --accent:        #d97706;
+  --accent-hover:  #b45309;
+  --shadow:        0 32px 80px rgba(0,0,0,0.12);
+  --chip-bg:       #fef3c7;
+  --chip-text:     #92400e;
+  --input-bg:      #f1f0eb;
+  --card-bg:       #ffffff;
+  --header-bg:     #ffffff;
+  --error-bg:      rgba(254,226,226,0.8);
+  --error-border:  #fca5a5;
+  --error-text:    #991b1b;
+  --stat-bg:       #ffffff;
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
@@ -11,23 +61,32 @@
   }
 
   body {
-    @apply bg-ink-900 text-white;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  * {
-    @apply box-border;
-  }
+  * { box-sizing: border-box; }
 
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 99px; }
+}
 
-  ::-webkit-scrollbar-track {
-    @apply bg-ink-800;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-ink-600 rounded-full;
-  }
+/* ── Theme-aware utility classes ── */
+@layer components {
+  .theme-bg-primary    { background-color: var(--bg-primary); }
+  .theme-bg-secondary  { background-color: var(--bg-secondary); }
+  .theme-bg-tertiary   { background-color: var(--bg-tertiary); }
+  .theme-border        { border-color: var(--border); }
+  .theme-border-light  { border-color: var(--border-light); }
+  .theme-text-primary  { color: var(--text-primary); }
+  .theme-text-secondary{ color: var(--text-secondary); }
+  .theme-text-muted    { color: var(--text-muted); }
+  .theme-card          { background-color: var(--card-bg); border-color: var(--border); }
+  .theme-input         { background-color: var(--input-bg); border-color: var(--border-light); color: var(--text-primary); }
+  .theme-input:focus   { border-color: var(--accent); }
+  .theme-chip          { background-color: var(--chip-bg); color: var(--chip-text); }
+  .theme-hover:hover   { background-color: var(--bg-hover); }
+  .theme-header        { background-color: var(--header-bg); border-color: var(--border); }
 }

@@ -5,6 +5,7 @@ import { logoutUser } from '../auth/authSlice';
 import { fetchFiles } from '../files/filesSlice';
 import UploadZone from '../files/UploadZone';
 import FileList from '../files/FileList';
+import ThemeToggle from '../../components/ThemeToggle';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -24,24 +25,35 @@ const Dashboard = () => {
   const totalPages = items.reduce((sum, f) => sum + (f.page_count || 0), 0);
 
   return (
-    <div className="min-h-screen bg-ink-900 font-sans">
-      {/* Navbar */}
-      <header className="border-b border-ink-700 px-6 py-4">
+    <div className="min-h-screen font-sans transition-colors duration-250" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+
+      {/* ── Navbar ── */}
+      <header style={{ backgroundColor: 'var(--header-bg)', borderBottomColor: 'var(--border)' }} className="border-b px-6 py-4 transition-colors duration-250">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
+
+          {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-ink-900">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--accent)' }}>
+              <svg viewBox="0 0 24 24" className="w-5 h-5" style={{ fill: 'var(--bg-primary)' }}>
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5z"/>
               </svg>
             </div>
-            <span className="font-display text-xl text-white">Archivum</span>
+            <span className="font-display text-xl" style={{ color: 'var(--text-primary)' }}>Archivum</span>
           </div>
 
+          {/* Right side */}
           <div className="flex items-center gap-4">
-            <span className="text-ink-400 text-sm hidden sm:block">{user?.email}</span>
+            <span className="text-sm hidden sm:block" style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
+
+            {/* ── Theme Toggle ── */}
+            <ThemeToggle />
+
             <button
               onClick={handleLogout}
-              className="text-sm text-ink-400 hover:text-white transition-colors"
+              className="text-sm transition-colors duration-200 hover:opacity-100"
+              style={{ color: 'var(--text-secondary)' }}
+              onMouseEnter={e => e.target.style.color = 'var(--text-primary)'}
+              onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}
             >
               Sign out
             </button>
@@ -49,7 +61,9 @@ const Dashboard = () => {
         </div>
       </header>
 
+      {/* ── Main Content ── */}
       <main className="max-w-6xl mx-auto px-6 py-10">
+
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10">
           {[
@@ -57,14 +71,22 @@ const Dashboard = () => {
             { label: 'Pages Indexed', value: totalPages },
             { label: 'Storage', value: 'Cloud' },
           ].map((stat) => (
-            <div key={stat.label} className="bg-ink-800 border border-ink-700 rounded-xl p-5">
-              <p className="text-ink-400 text-xs uppercase tracking-widest font-sans">{stat.label}</p>
-              <p className="font-display text-3xl text-white mt-1">{stat.value}</p>
+            <div
+              key={stat.label}
+              className="rounded-xl p-5 border transition-colors duration-250"
+              style={{ backgroundColor: 'var(--stat-bg)', borderColor: 'var(--border)' }}
+            >
+              <p className="text-xs uppercase tracking-widest font-sans" style={{ color: 'var(--text-secondary)' }}>
+                {stat.label}
+              </p>
+              <p className="font-display text-3xl mt-1" style={{ color: 'var(--text-primary)' }}>
+                {stat.value}
+              </p>
             </div>
           ))}
         </div>
 
-        {/* Main Grid */}
+        {/* Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <UploadZone onSuccess={() => dispatch(fetchFiles({ page: 1, limit: 20 }))} />
