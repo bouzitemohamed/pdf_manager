@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  googleId      String?  @unique
+  password      String?
+  refreshTokens String[]
+  files         File[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model File {
+  id         String   @id @default(cuid())
+  name       String
+  num_box    String?
+  page_count Int      @default(0)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  pages      Page[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  content   String
+  order     Int
+  fileId    String
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
