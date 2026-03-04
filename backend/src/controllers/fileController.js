@@ -1,35 +1,33 @@
 const prisma = require('../config/db');
 const { extractPagesFromBuffer } = require('../services/pdfService');
+const { log, ACTIONS } = require('../services/auditService');
+const { notifyAdmins } = require('../services/socketService');
 
-// ─── Upload PDF ───────────────────────────────────────────────────────────────
 const uploadFile = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'No file provided' });
 
     const { num_box } = req.body;
-    const buffer = req.file.buffer;
-    const originalName = req.file.originalname;
+    const { pages, totalPages } = await extractPagesFromBuffer(req.file.buffer);
 
-    // Extract pages
-    const { pages, totalPages } = await extractPagesFromBuffer(buffer);
-
-    // Save file record
     const file = await prisma.file.create({
       data: {
-        name: originalName,
+        name: req.file.originalname,
         num_box: num_box || null,
         page_count: totalPages,
         userId: req.user.id,
       },
     });
 
-    // Bulk insert pages
     await prisma.page.createMany({
-      data: pages.map((p) => ({
-        content: p.content,
-        order: p.order,
-        fileId: file.id,
-      })),
+      data: pages.map((p) => ({ content: p.content, order: p.order, fileId: file.id })),
+    });
+
+    // Audit + real-time notification to admins
+    await log({ action: ACTIONS.FILE_UPLOAD, userId: req.user.id, fileId: file.id, detail: file.name });
+    notifyAdmins('file:uploaded', {
+      file: { id: file.id, name: file.name, page_count: totalPages },
+      user: { id: req.user.id, email: req.user.email },
     });
 
     const result = await prisma.file.findUnique({
@@ -44,7 +42,6 @@ const uploadFile = async (req, res) => {
   }
 };
 
-// ─── Get All Files ────────────────────────────────────────────────────────────
 const getFiles = async (req, res) => {
   try {
     const { search, page = 1, limit = 20 } = req.query;
@@ -62,81 +59,57 @@ const getFiles = async (req, res) => {
 
     const [files, total] = await Promise.all([
       prisma.file.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: parseInt(limit),
-        select: {
-          id: true,
-          name: true,
-          num_box: true,
-          page_count: true,
-          createdAt: true,
-          updatedAt: true,
-          _count: { select: { pages: true } },
-        },
+        where, orderBy: { createdAt: 'desc' },
+        skip, take: parseInt(limit),
+        select: { id: true, name: true, num_box: true, page_count: true, createdAt: true, updatedAt: true },
       }),
       prisma.file.count({ where }),
     ]);
 
     return res.json({ files, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
 };
 
-// ─── Get Single File with Pages ───────────────────────────────────────────────
 const getFile = async (req, res) => {
   try {
     const file = await prisma.file.findFirst({
       where: { id: req.params.id, userId: req.user.id },
       include: { pages: { orderBy: { order: 'asc' } } },
     });
-
     if (!file) return res.status(404).json({ message: 'File not found' });
+    await log({ action: ACTIONS.FILE_VIEW, userId: req.user.id, fileId: file.id, detail: file.name });
     return res.json(file);
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
 };
 
-// ─── Delete File ──────────────────────────────────────────────────────────────
 const deleteFile = async (req, res) => {
   try {
-    const file = await prisma.file.findFirst({
-      where: { id: req.params.id, userId: req.user.id },
-    });
-
+    const file = await prisma.file.findFirst({ where: { id: req.params.id, userId: req.user.id } });
     if (!file) return res.status(404).json({ message: 'File not found' });
-
-    await prisma.file.delete({ where: { id: file.id } }); // pages cascade-deleted
+    await log({ action: ACTIONS.FILE_DELETE, userId: req.user.id, fileId: file.id, detail: file.name });
+    await prisma.file.delete({ where: { id: file.id } });
+    notifyAdmins('file:deleted', { fileId: file.id, fileName: file.name, user: { email: req.user.email } });
     return res.json({ message: 'File deleted successfully' });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
 };
 
-// ─── Search Page Content ──────────────────────────────────────────────────────
 const searchContent = async (req, res) => {
   try {
     const { q } = req.query;
     if (!q) return res.status(400).json({ message: 'Query required' });
-
     const pages = await prisma.page.findMany({
-      where: {
-        content: { contains: q, mode: 'insensitive' },
-        file: { userId: req.user.id },
-      },
+      where: { content: { contains: q, mode: 'insensitive' }, file: { userId: req.user.id } },
       include: { file: { select: { id: true, name: true } } },
       take: 50,
     });
-
     return res.json(pages);
   } catch (err) {
-    console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
 };

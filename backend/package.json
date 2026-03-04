@@ -6,8 +6,8 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "seed": "node src/utils/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
@@ -23,6 +23,7 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pdf-parse": "^1.1.1",
+    "socket.io": "^4.7.4",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

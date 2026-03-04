@@ -10,28 +10,18 @@ import ThemeToggle from '../../components/ThemeToggle';
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((s) => s.auth);
+  const { user }  = useSelector((s) => s.auth);
   const { items, total } = useSelector((s) => s.files);
 
-  useEffect(() => {
-    dispatch(fetchFiles({ page: 1, limit: 20 }));
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchFiles({ page: 1, limit: 20 })); }, [dispatch]);
 
-  const handleLogout = async () => {
-    await dispatch(logoutUser());
-    navigate('/login');
-  };
-
+  const handleLogout = async () => { await dispatch(logoutUser()); navigate('/login'); };
   const totalPages = items.reduce((sum, f) => sum + (f.page_count || 0), 0);
 
   return (
     <div className="min-h-screen font-sans transition-colors duration-250" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-
-      {/* ── Navbar ── */}
-      <header style={{ backgroundColor: 'var(--header-bg)', borderBottomColor: 'var(--border)' }} className="border-b px-6 py-4 transition-colors duration-250">
+      <header style={{ backgroundColor: 'var(--header-bg)', borderBottomColor: 'var(--border)' }} className="border-b px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-
-          {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--accent)' }}>
               <svg viewBox="0 0 24 24" className="w-5 h-5" style={{ fill: 'var(--bg-primary)' }}>
@@ -41,52 +31,39 @@ const Dashboard = () => {
             <span className="font-display text-xl" style={{ color: 'var(--text-primary)' }}>Archivum</span>
           </div>
 
-          {/* Right side */}
           <div className="flex items-center gap-4">
             <span className="text-sm hidden sm:block" style={{ color: 'var(--text-secondary)' }}>{user?.email}</span>
 
-            {/* ── Theme Toggle ── */}
+            {/* Admin panel link — only visible to admins */}
+            {user?.role === 'ADMIN' && (
+              <button onClick={() => navigate('/admin')}
+                className="text-xs px-3 py-2 rounded-xl border font-semibold transition-colors"
+                style={{ borderColor: 'var(--accent)', color: 'var(--accent)', backgroundColor: 'rgba(245,158,11,0.08)' }}>
+                ⚙ Admin Panel
+              </button>
+            )}
+
             <ThemeToggle />
 
-            <button
-              onClick={handleLogout}
-              className="text-sm transition-colors duration-200 hover:opacity-100"
+            <button onClick={handleLogout} className="text-sm transition-colors"
               style={{ color: 'var(--text-secondary)' }}
               onMouseEnter={e => e.target.style.color = 'var(--text-primary)'}
-              onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}
-            >
+              onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}>
               Sign out
             </button>
           </div>
         </div>
       </header>
 
-      {/* ── Main Content ── */}
       <main className="max-w-6xl mx-auto px-6 py-10">
-
-        {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10">
-          {[
-            { label: 'Documents', value: total },
-            { label: 'Pages Indexed', value: totalPages },
-            { label: 'Storage', value: 'Cloud' },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-xl p-5 border transition-colors duration-250"
-              style={{ backgroundColor: 'var(--stat-bg)', borderColor: 'var(--border)' }}
-            >
-              <p className="text-xs uppercase tracking-widest font-sans" style={{ color: 'var(--text-secondary)' }}>
-                {stat.label}
-              </p>
-              <p className="font-display text-3xl mt-1" style={{ color: 'var(--text-primary)' }}>
-                {stat.value}
-              </p>
+          {[{ label: 'Documents', value: total }, { label: 'Pages Indexed', value: totalPages }, { label: 'Storage', value: 'Cloud' }].map((stat) => (
+            <div key={stat.label} className="rounded-xl p-5 border" style={{ backgroundColor: 'var(--stat-bg)', borderColor: 'var(--border)' }}>
+              <p className="text-xs uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>{stat.label}</p>
+              <p className="font-display text-3xl mt-1" style={{ color: 'var(--text-primary)' }}>{stat.value}</p>
             </div>
           ))}
         </div>
-
-        {/* Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <UploadZone onSuccess={() => dispatch(fetchFiles({ page: 1, limit: 20 }))} />
