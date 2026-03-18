@@ -13,40 +13,88 @@ enum Role {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  email         String     @unique
-  googleId      String?    @unique
+  id            String      @id @default(cuid())
+  email         String      @unique
+  googleId      String?     @unique
   password      String?
-  role          Role       @default(USER)
-  suspended     Boolean    @default(false)
+  role          Role        @default(USER)
+  suspended     Boolean     @default(false)
   refreshTokens String[]
-  files         File[]
+  pdfFiles      PdfFile[]
+  folders       Folder[]
   auditLogs     AuditLog[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
-model File {
-  id         String     @id @default(cuid())
-  name       String
-  num_box    String?
-  page_count Int        @default(0)
-  userId     String
-  user       User       @relation(fields: [userId], references: [id])
-  pages      Page[]
-  auditLogs  AuditLog[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+model Service {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String   @default("#f59e0b")
+  boxes       Box[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Box {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  folders     Folder[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([name, serviceId])
+}
+
+model Folder {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  boxId       String
+  box         Box       @relation(fields: [boxId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  pdfFiles    PdfFile[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([name, boxId])
+}
+
+model PdfFile {
+  id           String     @id @default(cuid())
+  title        String
+  dateCreated  DateTime   @default(now())
+  folderId     String
+  folder       Folder     @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  uploadedById String
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id])
+
+  // Text storage (extracted pages)
+  pages        Page[]
+  pageCount    Int        @default(0)
+
+  // Binary storage (original PDF on disk)
+  filePath     String?    // path on disk
+  fileName     String?    // original filename
+  fileSize     Int?       // bytes
+
+  auditLogs    AuditLog[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model Page {
   id        String   @id @default(cuid())
   content   String
   order     Int
-  fileId    String
-  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  pdfFileId String
+  pdfFile   PdfFile  @relation(fields: [pdfFileId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model AuditLog {
@@ -55,7 +103,7 @@ model AuditLog {
   detail    String?
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  fileId    String?
-  file      File?    @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  pdfFileId String?
+  pdfFile   PdfFile? @relation(fields: [pdfFileId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
 }

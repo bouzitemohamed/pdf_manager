@@ -1,16 +1,20 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer  from '../features/auth/authSlice';
-import filesReducer from '../features/files/filesSlice';
-import themeReducer from '../features/theme/themeSlice';
-import adminReducer from '../features/admin/adminSlice';
+import authReducer     from '../features/auth/authSlice';
+import themeReducer    from '../features/theme/themeSlice';
+import adminReducer    from '../features/admin/adminSlice';
+import servicesReducer from '../features/services/servicesSlice';
+import browseReducer   from '../features/browse/browseSlice';
+import pdfFilesReducer from '../features/files/pdfFilesSlice';
 
 export const store = configureStore({
   reducer: {
-    auth:  authReducer,
-    files: filesReducer,
-    theme: themeReducer,
-    admin: adminReducer,
-  },
+    auth:     authReducer,
+    theme:    themeReducer,
+    admin:    adminReducer,
+    services: servicesReducer,
+    browse:   browseReducer,
+    pdfFiles: pdfFilesReducer,
+  }
 });
 
 export default store;
